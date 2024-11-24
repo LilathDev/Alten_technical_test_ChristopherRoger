@@ -10,7 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace back.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/account")]
     [ApiController]
     public class AccountController : ControllerBase
     {
@@ -28,7 +28,7 @@ namespace back.Controllers
         /// <summary>
         /// Create a new user account.
         /// </summary>
-        [HttpPost("register")]
+        [HttpPost]
         public async Task<IActionResult> Register([FromBody] UserDto userDto)
         {
             if (userDto == null)
@@ -56,7 +56,7 @@ namespace back.Controllers
         /// <summary>
         /// Authenticate and generate a JWT token.
         /// </summary>
-        [HttpPost("login")]
+        [HttpPost("token")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             if (loginDto == null)
@@ -84,7 +84,8 @@ namespace back.Controllers
                 new Claim(JwtRegisteredClaimNames.Sub, user.Username),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Role, user.Email == "admin@admin.com" ? "Admin" : "User")
+                new Claim(ClaimTypes.Role, user.Email == "admin@admin.com" ? "Admin" : "User"),
+                new Claim(ClaimTypes.Authentication, user.Id.ToString()),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]!));

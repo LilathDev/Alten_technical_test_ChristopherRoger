@@ -45,5 +45,8 @@ namespace back.Models.Entities
         [Required]
         [MinLength(6)]
         public string PasswordHash { get; set; } = string.Empty;
+
+        public Cart? Cart { get; set; }
+
     }
 }

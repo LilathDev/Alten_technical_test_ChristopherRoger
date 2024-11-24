@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using back.Data;
 using back.Models.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace back.Repositories
@@ -35,6 +36,11 @@ namespace back.Repositories
         public async Task<bool> UserExistsAsync(string username, string email)
         {
             return await _context.Users.AnyAsync(u => u.Username == username || u.Email == email);
+        }
+
+        public async Task<User?> GetUserByIdAsync(Guid id)
+        {
+            return await _context.Users.FirstOrDefaultAsync((x) => x.Id == id);
         }
     }
 }

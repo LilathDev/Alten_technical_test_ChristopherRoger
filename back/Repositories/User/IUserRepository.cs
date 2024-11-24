@@ -10,6 +10,7 @@ namespace back.Repositories
     {
         Task AddUserAsync(User user);
         Task<List<User>> GetAllUsersAsync();
+        Task<User?> GetUserByIdAsync(Guid id);
         Task<User?> GetUserByEmailAsync(string email);
         Task<bool> UserExistsAsync(string username, string email);
     }
