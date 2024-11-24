@@ -14,12 +14,12 @@ namespace back.Services
 
         public string HashPassword(string password)
         {
-            return _passwordHasher.HashPassword(null, password);
+            return _passwordHasher.HashPassword(string.Empty, password);
         }
 
         public bool VerifyPassword(string hashedPassword, string providedPassword)
         {
-            var result = _passwordHasher.VerifyHashedPassword(null, hashedPassword, providedPassword);
+            var result = _passwordHasher.VerifyHashedPassword(string.Empty, hashedPassword, providedPassword);
             return result == PasswordVerificationResult.Success;
         }
     }

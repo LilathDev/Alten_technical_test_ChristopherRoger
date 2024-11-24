@@ -9,6 +9,8 @@ namespace back.Repositories
     public interface ICartRepository
     {
         Task<Cart?> GetCartByUserIdAsync(Guid userId);
+        Task<Cart?> GetCartByIdAsync(int carId);
         Task AddCartAsync(Cart cart);
+        Task SaveChangesAsync();
     }
 }

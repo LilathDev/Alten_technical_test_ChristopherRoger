@@ -8,7 +8,7 @@ namespace back.Repositories
     public interface IProductRepository
     {
         Task<IEnumerable<Product>> GetAllProductsAsync();
-        Task<Product?> GetProductAsync(int id);
+        Task<Product?> GetProductByIdAsync(int id);
         Task AddProductAsync(Product product);
         Task DeleteProductAsync(Product product);
 

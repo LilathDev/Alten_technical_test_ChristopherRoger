@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace back.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/products")]
     public class ProductController : ControllerBase
     {
         private readonly IProductRepository _productRepository;
@@ -39,7 +39,7 @@ namespace back.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProduct(int id)
         {
-            Product? product = await _productRepository.GetProductAsync(id);
+            Product? product = await _productRepository.GetProductByIdAsync(id);
             if (product == null)
                 return NotFound(new { Message = "The product you tried to retrieve doesn't exist." });
 
@@ -87,7 +87,7 @@ namespace back.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            Product? product = await _productRepository.GetProductAsync(id);
+            Product? product = await _productRepository.GetProductByIdAsync(id);
 
             if (product == null)
                 return NotFound(new { Message = "No product found with the provided ID." });
@@ -100,7 +100,7 @@ namespace back.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> PatchProduct([FromRoute] int id, [FromBody] UpdateProductDto updatedProduct)
         {
-            Product? existingProduct = await _productRepository.GetProductAsync(id);
+            Product? existingProduct = await _productRepository.GetProductByIdAsync(id);
 
             if (existingProduct == null)
             {
