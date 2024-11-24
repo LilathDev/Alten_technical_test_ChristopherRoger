@@ -10,28 +10,32 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace back.Controllers
 {
-    [Route("api/account")]
+    [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
         private readonly IPasswordHasherService _passwordHasher;
+
         public AccountController(IUserRepository userRepository, IConfiguration configuration, IPasswordHasherService passwordHasher)
         {
             _userRepository = userRepository;
             _configuration = configuration;
             _passwordHasher = passwordHasher;
-
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] UserDto userDto)
+        /// <summary>
+        /// Create a new user account.
+        /// </summary>
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] UserDto userDto)
         {
+            if (userDto == null)
+                return BadRequest(new { Message = "Invalid user data." });
+
             if (await _userRepository.UserExistsAsync(userDto.Username, userDto.Email))
-            {
-                return BadRequest("User already exists.");
-            }
+                return Conflict(new { Message = "User with the same username or email already exists." });
 
             var hashedPassword = _passwordHasher.HashPassword(userDto.Password);
 
@@ -46,36 +50,41 @@ namespace back.Controllers
 
             await _userRepository.AddUserAsync(user);
 
-            return Ok("User created successfully.");
+            return CreatedAtAction(nameof(Login), new { email = user.Email }, new { Message = "User created successfully.", User = user.Username });
         }
 
-        [HttpPost("token")]
+        /// <summary>
+        /// Authenticate and generate a JWT token.
+        /// </summary>
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
+            if (loginDto == null)
+                return BadRequest(new { Message = "Invalid login data." });
+
             var user = await _userRepository.GetUserByEmailAsync(loginDto.Email);
             if (user == null)
-            {
-                return Unauthorized("Invalid email or password.");
-            }
+                return Unauthorized(new { Message = "Invalid email or password." });
 
             var isPasswordValid = _passwordHasher.VerifyPassword(user.PasswordHash, loginDto.Password);
             if (!isPasswordValid)
-            {
-                return Unauthorized("Invalid email or password.");
-            }
+                return Unauthorized(new { Message = "Invalid email or password." });
 
-            // Générez et retournez le token JWT ici
             var token = GenerateJwtToken(user);
-            return Ok(new { Token = token });
+            return Ok(new { Token = token, Message = "Login successful." });
         }
 
+        /// <summary>
+        /// Generate a JWT token for the authenticated user.
+        /// </summary>
         private string GenerateJwtToken(User user)
         {
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Username),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Role, user.Email == "admin@admin.com" ? "Admin" : "User")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]!));
@@ -85,7 +94,7 @@ namespace back.Controllers
                 issuer: _configuration["JwtSettings:Issuer"],
                 audience: _configuration["JwtSettings:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(1),
+                expires: DateTime.UtcNow.AddHours(1),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
